@@ -24,10 +24,11 @@ void setup ()
 }
 public void setMines()
 {
-    while(mines.size() < NUM_BOMBS){
-        int row = (int)(Math.random()*20);
-        int col = (int)(Math.random()*20);
-        if(mines.contains(buttons)==false){
+    int row,col;
+    for(int i = 0; i<NUM_BOMBS;i++){
+        row = (int)(Math.random()*20);
+        col = (int)(Math.random()*20);
+        if(!mines.contains(buttons[row][col])){
             mines.add(buttons[row][col]);
         System.out.println(row+"."+col);
         }
@@ -42,60 +43,80 @@ public void draw ()
 }
 public boolean isWon()
 {
-    for(int i = 0; i<=NUM_ROWS; i++){
-        for(int c = 0; i<=NUM_COLS;c++){
-            if(!mines.contains(buttons[i][c])&&!buttons[i][c].clicked){
-                return false;
-            }
+    for(int i = 0; i<mines.size(); i++){
+        if(mines.get(i).flagged == false){
+            return false;
         }
     }
     return true;
 }
 public void displayLosingMessage()
 {
-    textSize(40);
-    text("You lose:(",10,90);
+    textSize(8);
+    for(int i=0;i<mines.size();i++){
+        mines.get(i).clicked =true;
+    }
+    for(int r=0;r<NUM_ROWS;r++){
+        for(int c=0;c<NUM_COLS;c++){
+            if(!mines.contains(buttons[r][c])){
+                buttons[r][c].clicked=true;
+            }
+        }
+    }
+    buttons[NUM_ROWS/2][NUM_COLS/2 -1].setLabel("You");
+    buttons[NUM_ROWS/2][NUM_COLS/2 ].setLabel("Lost");
+    buttons[NUM_ROWS/2][NUM_COLS/2 +1].setLabel("XD");
+    // textSize(10);
+    // text("You lose:(",10,90);
 }
 public void displayWinningMessage()
 {
-    textSize(40);
-    text("You win:(",10,90);
+    buttons[NUM_ROWS/2][NUM_COLS/2 -1].setLabel("YOU");
+    buttons[NUM_ROWS/2][NUM_COLS/2 ].setLabel("WIN");
+    buttons[NUM_ROWS/2][NUM_COLS/2 +1].setLabel("XD");
+    // textSize(10);
+    // text("You win:(",10,90);
 }
 public boolean isValid(int r, int c)
 {
-    if(r >= NUM_ROWS || r < 0 || c >= NUM_COLS || c< 0){
-        return false;
-    }
-    return true;
+    return r < NUM_ROWS && r >= 0 && c < NUM_COLS && c>= 0;
 }
 public int countMines(int row, int col)
 {
     int numMines = 0;
-    if(isValid(NUM_ROWS-1,NUM_COLS)==true && mines.contains(buttons[NUM_ROWS-1][NUM_COLS])){
-        numMines ++;
-    }
-    if(isValid(NUM_ROWS+1,NUM_COLS)==true && mines.contains(buttons[NUM_ROWS+1][NUM_COLS])){
-        numMines ++;
-    }
-    if(isValid(NUM_ROWS,NUM_COLS-1)==true && mines.contains(buttons[NUM_ROWS][NUM_COLS-1])){
-        numMines ++;
-    }
-    if(isValid(NUM_ROWS,NUM_COLS+1)==true && mines.contains(buttons[NUM_ROWS][NUM_COLS+1])){
-        numMines ++;
-    }
-    if(isValid(NUM_ROWS-1,NUM_COLS+1)==true && mines.contains(buttons[NUM_ROWS-1][NUM_COLS+1])){
-        numMines ++;
-    }
-    if(isValid(NUM_ROWS-1,NUM_COLS-1)==true && mines.contains(buttons[NUM_ROWS-1][NUM_COLS-1])){
-        numMines ++;
-    }
-    if(isValid(NUM_ROWS+1,NUM_COLS+1)==true && mines.contains(buttons[NUM_ROWS+1][NUM_COLS+1])){
-        numMines ++;
-    }
-    if(isValid(NUM_ROWS+1,NUM_COLS-1)==true && mines.contains(buttons[NUM_ROWS+1][NUM_COLS-1])){
-        numMines ++;
+    for(int r=row-1; r<=row+1;r++){
+        for(int c = col-1; c<=col+1;c++){
+            if(isValid(r,c) && mines.contains(buttons[r][c])){
+                numMines++;
+            }
+        }
     }
     return numMines;
+    // if(isValid(NUM_ROWS-1,NUM_COLS)==true && mines.contains(buttons[NUM_ROWS-1][NUM_COLS])){
+    //     numMines ++;
+    // }
+    // if(isValid(NUM_ROWS+1,NUM_COLS)==true && mines.contains(buttons[NUM_ROWS+1][NUM_COLS])){
+    //     numMines ++;
+    // }
+    // if(isValid(NUM_ROWS,NUM_COLS-1)==true && mines.contains(buttons[NUM_ROWS][NUM_COLS-1])){
+    //     numMines ++;
+    // }
+    // if(isValid(NUM_ROWS,NUM_COLS+1)==true && mines.contains(buttons[NUM_ROWS][NUM_COLS+1])){
+    //     numMines ++;
+    // }
+    // if(isValid(NUM_ROWS-1,NUM_COLS+1)==true && mines.contains(buttons[NUM_ROWS-1][NUM_COLS+1])){
+    //     numMines ++;
+    // }
+    // if(isValid(NUM_ROWS-1,NUM_COLS-1)==true && mines.contains(buttons[NUM_ROWS-1][NUM_COLS-1])){
+    //     numMines ++;
+    // }
+    // if(isValid(NUM_ROWS+1,NUM_COLS+1)==true && mines.contains(buttons[NUM_ROWS+1][NUM_COLS+1])){
+    //     numMines ++;
+    // }
+    // if(isValid(NUM_ROWS+1,NUM_COLS-1)==true && mines.contains(buttons[NUM_ROWS+1][NUM_COLS-1])){
+    //     numMines ++;
+    // }
+    // return numMines;
 }
 public class MSButton
 {
@@ -125,14 +146,16 @@ public class MSButton
     {
         clicked = true;
         if(mouseButton == RIGHT){
-            flagged=!flagged;
-            if(flagged==false){
+            if(flagged==true){
                 clicked=false;
+                flagged=false;
+            }else if(flagged ==false){
+                flagged = true;
             }
         }else if(mines.contains(this)){
             displayLosingMessage();
-        }else if(countMines(myRow,myCol)>0){
-            setLabel(countMines(myRow,myCol));
+        }else if(countMines(this.myRow,this.myCol)>0){
+            setLabel(""+countMines(this.myRow,this.myCol));
         }else{
             if(isValid(myRow,myCol-1) && buttons[myRow][myCol-1].clicked == false)
                 buttons[myRow][myCol-1].mousePressed();
